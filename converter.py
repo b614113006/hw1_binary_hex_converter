@@ -70,24 +70,25 @@ class ConverterApp:
         tk.Button(root, text="Convert", command=self.convert, width=40).grid(row=2, column=0, columnspan=3, pady=5)
         tk.Button(root, text="Clear", command=self.clear, width=40).grid(row=3, column=0, columnspan=3, pady=5)
 
-    def convert(self):
+def convert(self):
         try:
             # 判斷哪個輸入框有資料並進行轉換
             if self.entry_dec.get():
                 val = int(self.entry_dec.get()) # 僅用於讀取輸入文字，非進位轉換
-                # 改進：檢查負數和超過 MAX_VALUE
                 if val < 0:
                     messagebox.showerror("錯誤", "十進位不能為負數")
                     return
-                if val > MAX_VALUE:
-                    messagebox.showwarning("警告", f"數字已超過 {MAX_VALUE}，轉換仍會進行！")
+                # 如果數值很大，依然可以正常執行轉換
                 self.update_fields(val)
+                
             elif self.entry_bin.get():
                 val = bin_to_dec(self.entry_bin.get())
                 self.update_fields(val)
+                
             elif self.entry_hex.get():
                 val = hex_to_dec(self.entry_hex.get())
                 self.update_fields(val)
+                
             else:
                 messagebox.showwarning("提示", "請至少輸入一個數值")
         except ValueError as e:
