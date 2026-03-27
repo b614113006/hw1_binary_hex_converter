@@ -1,26 +1,116 @@
-def binary_to_hex(binary_str):
-    # Validate binary input
-    if not all(char in '01' for char in binary_str):
-        raise ValueError("Input must be a binary string.")
-    decimal_value = int(binary_str, 2)
-    return hex(decimal_value)[2:]
+import tkinter as tk
+from tkinter import messagebox
 
+MAX_VALUE = 255
+HEX_CHARS = "0123456789ABCDEF"
 
-def hex_to_binary(hex_str):
-    # Validate hex input
-    if not all(char in '0123456789abcdefABCDEF' for char in hex_str):
-        raise ValueError("Input must be a hex string.")
-    decimal_value = int(hex_str, 16)
-    return bin(decimal_value)[2:]
+def dec_to_bin(n: int) -> str:
+    """Style 9: 將十進位轉換為二進位（連除法） [cite: 104, 287]"""
+    if n == 0: return "0"
+    res = ""
+    temp = n
+    while temp > 0:
+        res = str(temp % 2) + res
+        temp //= 2
+    return res
 
+def dec_to_hex(n: int) -> str:
+    """Style 9: 將十進位轉換為十六進位（連除法） [cite: 104, 401]"""
+    if n == 0: return "0"
+    res = ""
+    temp = n
+    while temp > 0:
+        remainder = temp % 16
+        res = HEX_CHARS[remainder] + res
+        temp //= 16
+    return res
 
-# Main execution
-if __name__ == '__main__':
-    try:
-        binary_input = input('Enter a binary number: ')
-        print(f"Hexadecimal representation: {binary_to_hex(binary_input)}")
+def bin_to_dec(b_str: str) -> int:
+    """Style 9: 將二進位轉換為十進位（權值相加） [cite: 104, 271, 272]"""
+    # 輸入驗證：檢查是否只包含 0 和 1
+    if not all(c in '01' for c in b_str):
+        raise ValueError("二進位只能包含 0 和 1")
+    res = 0
+    for i, char in enumerate(b_str[::-1]):
+        if char == '1':
+            res += (2 ** i)
+    return res
 
-        hex_input = input('Enter a hexadecimal number: ')
-        print(f"Binary representation: {hex_to_binary(hex_input)}")
-    except ValueError as e:
-        print(e)
+def hex_to_dec(h_str: str) -> int:
+    """Style 9: 將十六進位轉換為十進位（權值相加） [cite: 104, 494, 500]"""
+    res = 0
+    h_str = h_str.upper()
+    # 輸入驗證：檢查是否為有效十六進位字符
+    for char in h_str:
+        if char not in HEX_CHARS:
+            raise ValueError(f"無效的十六進位字符：{char}")
+    for i, char in enumerate(h_str[::-1]):
+        val = HEX_CHARS.find(char)
+        res += val * (16 ** i)
+    return res
+
+class ConverterApp:
+    def __init__(self, root):
+        self.root = root
+        self.root.title("Binary / Decimal / Hex Converter")
+        
+        # 建立 UI 元件 
+        tk.Label(root, text="Binary").grid(row=0, column=0)
+        tk.Label(root, text="Decimal").grid(row=0, column=1)
+        tk.Label(root, text="Hexadecimal").grid(row=0, column=2)
+        
+        self.entry_bin = tk.Entry(root)
+        self.entry_dec = tk.Entry(root)
+        self.entry_hex = tk.Entry(root)
+        
+        self.entry_bin.grid(row=1, column=0, padx=5, pady=5)
+        self.entry_dec.grid(row=1, column=1, padx=5, pady=5)
+        self.entry_hex.grid(row=1, column=2, padx=5, pady=5)
+        
+        tk.Button(root, text="Convert", command=self.convert, width=40).grid(row=2, column=0, columnspan=3, pady=5)
+        tk.Button(root, text="Clear", command=self.clear, width=40).grid(row=3, column=0, columnspan=3, pady=5)
+
+    def convert(self):
+        try:
+            # 判斷哪個輸入框有資料並進行轉換
+            if self.entry_dec.get():
+                val = int(self.entry_dec.get()) # 僅用於讀取輸入文字，非進位轉換
+                # 改進：檢查負數和超過 MAX_VALUE
+                if val < 0:
+                    messagebox.showerror("錯誤", "十進位不能為負數")
+                    return
+                if val > MAX_VALUE:
+                    messagebox.showwarning("警告", f"數字已超過 {MAX_VALUE}，轉換仍會進行！")
+                self.update_fields(val)
+            elif self.entry_bin.get():
+                val = bin_to_dec(self.entry_bin.get())
+                self.update_fields(val)
+            elif self.entry_hex.get():
+                val = hex_to_dec(self.entry_hex.get())
+                self.update_fields(val)
+            else:
+                messagebox.showwarning("提示", "請至少輸入一個數值")
+        except ValueError as e:
+            messagebox.showerror("錯誤", str(e))
+        except Exception as e:
+            messagebox.showerror("錯誤", "請輸入有效的數字格式")
+
+    def update_fields(self, decimal_val):
+        self.clear()
+        self.entry_bin.insert(0, dec_to_bin(decimal_val))
+        self.entry_dec.insert(0, str(decimal_val))
+        self.entry_hex.insert(0, dec_to_hex(decimal_val))
+
+    def clear(self):
+        self.entry_bin.delete(0, tk.END)
+        self.entry_dec.delete(0, tk.END)
+        self.entry_hex.delete(0, tk.END)
+
+#依各語言不同宣告程式進入點 [cite: 115, 116, 120]
+def main():
+    root = tk.Tk()
+    app = ConverterApp(root)
+    root.mainloop()
+
+if __name__ == "__main__":
+    main()
