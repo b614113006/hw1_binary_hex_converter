@@ -1,4 +1,30 @@
 # hw1_binary_hex_converter
+
+這是一個十進位、二進位、十六進位轉換器 GUI 程式。
+
+## 功能
+- 支援十進位、二進位、十六進位三種進制轉換
+- 使用 Tkinter 建立圖形使用者介面
+- 輸入驗證確保資料正確性
+
+## 如何執行
+```bash
+python converter.py
+```
+
+## 使用方法
+1. 在三個輸入框中任選一個輸入數值
+2. 按下「Convert」按鈕進行轉換
+3. 其他兩個輸入框會自動顯示轉換結果
+4. 按下「Clear」按鈕清除所有輸入
+
+## 支援範圍
+- 十進位：0 ~ 255
+- 二進位：0 ~ 11111111
+- 十六進位：0 ~ FF
+
+---
+
 import tkinter as tk
 from tkinter import messagebox
 
@@ -28,6 +54,9 @@ def dec_to_hex(n: int) -> str:
 
 def bin_to_dec(b_str: str) -> int:
     """Style 9: 將二進位轉換為十進位（權值相加） [cite: 104, 271, 272]"""
+    # 輸入驗證：檢查是否只包含 0 和 1
+    if not all(c in '01' for c in b_str):
+        raise ValueError("二進位只能包含 0 和 1")
     res = 0
     for i, char in enumerate(b_str[::-1]):
         if char == '1':
@@ -38,6 +67,10 @@ def hex_to_dec(h_str: str) -> int:
     """Style 9: 將十六進位轉換為十進位（權值相加） [cite: 104, 494, 500]"""
     res = 0
     h_str = h_str.upper()
+    # 輸入驗證：檢查是否為有效十六進位字符
+    for char in h_str:
+        if char not in HEX_CHARS:
+            raise ValueError(f"無效的十六進位字符：{char}")
     for i, char in enumerate(h_str[::-1]):
         val = HEX_CHARS.find(char)
         res += val * (16 ** i)
@@ -69,7 +102,12 @@ class ConverterApp:
             # 判斷哪個輸入框有資料並進行轉換
             if self.entry_dec.get():
                 val = int(self.entry_dec.get()) # 僅用於讀取輸入文字，非進位轉換
-                if val > MAX_VALUE: messagebox.showwarning("加分提醒", "數字已超過255，轉換仍會進行！")
+                # 改進：檢查負數和超過 MAX_VALUE
+                if val < 0:
+                    messagebox.showerror("錯誤", "十進位不能為負數")
+                    return
+                if val > MAX_VALUE:
+                    messagebox.showwarning("警告", f"數字已超過 {MAX_VALUE}，轉換仍會進行！")
                 self.update_fields(val)
             elif self.entry_bin.get():
                 val = bin_to_dec(self.entry_bin.get())
@@ -77,6 +115,10 @@ class ConverterApp:
             elif self.entry_hex.get():
                 val = hex_to_dec(self.entry_hex.get())
                 self.update_fields(val)
+            else:
+                messagebox.showwarning("提示", "請至少輸入一個數值")
+        except ValueError as e:
+            messagebox.showerror("錯誤", str(e))
         except Exception as e:
             messagebox.showerror("錯誤", "請輸入有效的數字格式")
 
